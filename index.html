@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #1e1e1e;
+        color: #d3d3d3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        padding: 20px; /* Add padding to ensure distance from edges */
+        box-sizing: border-box; /* Include padding and border in element's total width and height */
+      }
+
+      #chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%; /* Full height minus body padding */
+        width: 100%; /* Full width minus body padding */
+        max-width: 600px; /* Optional: limit the maximum width */
+        background-color: #121212;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      #messages {
+        flex: 1;
+        padding: 10px;
+        overflow-y: auto;
+      }
+
+      .message {
+        margin: 10px 0;
+        display: flex;
+        align-items: center;
+      }
+
+      .my-message {
+        justify-content: flex-end;
+      }
+
+      .answer-message {
+        justify-content: flex-start;
+      }
+
+      .message .content {
+        max-width: 70%;
+        padding: 10px;
+        border-radius: 10px;
+      }
+
+      .my-message .content {
+        background-color: #3a3a3a;
+        color: #fff;
+      }
+
+      .answer-message .content {
+        background-color: #575757;
+        color: #fff;
+        position: relative;
+      }
+
+      .copy-button {
+        background: transparent;
+        border: none;
+        color: #fff;
+        margin-left: 10px;
+        cursor: pointer;
+      }
+
+      #input-area {
+        display: flex;
+        padding: 10px;
+        background-color: #1e1e1e;
+      }
+
+      #user-input {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 10px;
+        margin-right: 10px;
+      }
+
+      #send-button {
+        background-color: #3a3a3a;
+        border: none;
+        padding: 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        color: #fff;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .message .content {
+          max-width: 80%;
+        }
+
+        #user-input {
+          padding: 8px;
+          margin-right: 5px;
+        }
+
+        #send-button {
+          padding: 8px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .message .content {
+          max-width: 90%;
+        }
+
+        #user-input {
+          padding: 6px;
+          margin-right: 5px;
+        }
+
+        #send-button {
+          padding: 6px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chat-container">
+      <div id="messages"></div>
+      <div id="input-area">
+        <input type="text" id="user-input" placeholder="Type a message..." />
+        <button id="send-button" onclick="sendMessage()">&#9654;</button>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("user-input")
+        .addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            sendMessage();
+          }
+        });
+
+      async function sendMessage() {
+        const userInput = document.getElementById("user-input").value;
+        if (!userInput.trim()) return;
+
+        addMessage(userInput, "my-message");
+        document.getElementById("user-input").value = "";
+
+        const response = await fetch("chat.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: userInput }),
+        });
+
+        const data = await response.json();
+        addMessage(data.reply, "answer-message", true);
+      }
+
+      function addMessage(content, className, isAnswer = false) {
+        const messagesDiv = document.getElementById("messages");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${className}`;
+
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "content";
+        contentDiv.textContent = content;
+
+        messageDiv.appendChild(contentDiv);
+
+        if (isAnswer) {
+          const copyButton = document.createElement("button");
+          copyButton.className = "copy-button";
+          copyButton.innerHTML = "&#128203;"; // Copy icon
+          copyButton.onclick = () => copyToClipboard(content);
+          messageDiv.appendChild(copyButton);
+        }
+
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert("Answer copied to clipboard!");
+        });
+      }
+    </script>
+  </body>
+</html>
